@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="data:,">
+<title>Kasane Teto · CiberBot</title>
+<style>
+  :root {
+    --strip: #1C1B22;
+    --frame: #2B2A33;
+    --card: #23222A;
+    --chat: #26252D;
+    --side: #33323C;
+    --hover: #3A3845;
+    --press: #42414D;
+    --outline: #4A4858;
+    --text: #FBFBFE;
+    --muted: #9E9EA8;
+    --soft: #9C97A6;
+    --accent: #C069FF;
+    --accent-hover: #AD3BFF;
+    --accent-press: #9400FF;
+    --bot: #3A3845;
+    --user: #5B3A80;
+    --avatar: #42414D;
+    --name: #E2C6D4;
+    --side-text: #E4E0E8;
+    --badge: #101A22;
+    --badge-line: #557C94;
+    --badge-text: #A7C4D6;
+    --fallback: #CDBFD0;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--frame);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+    font-size: 14px;
+    overflow-x: hidden;
+  }
+  button, input { font: inherit; }
+
+  .app {
+    height: 100vh;
+    min-height: 620px;
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr) auto auto auto;
+    width: 100%;
+  }
+
+  .tabs { background: var(--strip); padding: 8px 8px 0; }
+  .tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--frame);
+    border-top: 2px solid var(--accent);
+    border-radius: 8px 8px 0 0;
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+  .tab-close { color: var(--muted); margin-left: 10px; font-size: 11px; }
+
+  .avatar-tab {
+    position: relative;
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    background: var(--avatar);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .avatar-img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: none;
+  }
+  .fallback {
+    color: var(--fallback);
+    font-weight: 700;
+    font-family: "Yu Gothic UI", "Meiryo UI", "Segoe UI", sans-serif;
+  }
+  .avatar-tab .fallback { font-size: 8px; }
+
+  .toolbar {
+    background: var(--frame);
+    padding: 8px 10px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .nav {
+    width: 32px;
+    height: 32px;
+    flex: 0 0 auto;
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 15px;
+    transition: transform 0.12s, background 0.12s;
+  }
+  .nav:hover { background: var(--hover); transform: scale(1.08); }
+  .nav:active { background: var(--press); }
+  .urlbar {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--strip);
+    border-radius: 8px;
+    height: 34px;
+    padding: 0 12px;
+    margin: 0 8px;
+    color: var(--muted);
+    font-size: 13.5px;
+  }
+  .urlbar .url { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .accent-btn {
+    flex: 0 0 auto;
+    background: var(--accent);
+    color: var(--strip);
+    border: 0;
+    border-radius: 8px;
+    padding: 8px 18px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: transform 0.12s, background 0.12s;
+  }
+  .accent-btn:hover { background: var(--accent-hover); color: var(--text); transform: scale(1.08); }
+  .accent-btn:active { background: var(--accent-press); color: var(--text); }
+
+  .main {
+    display: grid;
+    grid-template-columns: 268px minmax(0, 1fr);
+    gap: 16px;
+    min-height: 0;
+    padding: 12px 16px 8px;
+  }
+  .side {
+    background: var(--card);
+    border-radius: 12px;
+    padding: 14px;
+    overflow-y: auto;
+    min-height: 0;
+  }
+  .avatar-box {
+    position: relative;
+    width: 180px;
+    height: 180px;
+    margin: 0 auto;
+    border-radius: 14px;
+    background: var(--avatar);
+    border: 2px solid var(--outline);
+    overflow: hidden;
+  }
+  .avatar-box .avatar-img { inset: 2px; width: calc(100% - 4px); height: calc(100% - 4px); border-radius: 13px; }
+  .avatar-box .fallback {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+  }
+  .kali-badge {
+    position: absolute;
+    right: 6px;
+    bottom: 6px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    min-height: 34px;
+    padding: 8px 10px;
+    background: var(--badge);
+    border: 2px solid var(--badge-line);
+    border-radius: 8px;
+  }
+  .kali-badge.show { display: flex; }
+  .kali-badge img { height: 28px; display: none; }
+  .kali-text {
+    font-family: "Trebuchet MS", sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--badge-text);
+  }
+  .side-title {
+    text-align: center;
+    font-family: "Trebuchet MS", sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--name);
+    margin-top: 12px;
+  }
+  .side-sub { text-align: center; font-size: 12.5px; color: var(--soft); margin: 2px 0 14px; }
+  .side-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: var(--side);
+    color: var(--side-text);
+    border: 0;
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: transform 0.12s, background 0.12s;
+  }
+  .side-btn:hover { background: var(--hover); transform: scale(1.04); }
+  .side-btn:active { background: var(--press); }
+  .side-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--soft);
+    margin: 12px 2px 6px;
+    letter-spacing: 0.04em;
+  }
+  .side-note { font-size: 11px; color: var(--soft); margin: 12px 2px 0; line-height: 1.5; }
+
+  .chat {
+    background: var(--chat);
+    border-radius: 12px;
+    padding: 14px 12px 14px 18px;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+  }
+  .messages {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    padding-right: 6px;
+  }
+  .bubble {
+    max-width: 680px;
+    border: 1px solid var(--outline);
+    border-radius: 10px;
+    padding: 11px 16px;
+    margin: 0 0 10px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    line-height: 1.55;
+    font-size: 14px;
+    color: var(--text);
+  }
+  .bubble.bot { background: var(--bot); align-self: flex-start; }
+  .bubble.user { background: var(--user); align-self: flex-end; }
+
+  .topics {
+    background: var(--frame);
+    border-top: 1px solid var(--outline);
+    padding: 10px 16px 4px;
+  }
+  .topics-label { font-size: 11px; font-weight: 700; color: var(--muted); margin: 0 2px 6px; }
+  .chips {
+    max-height: 112px;
+    overflow-y: auto;
+    display: flex;
+    flex-wrap: wrap;
+    padding: 2px 2px 0;
+  }
+  .chip {
+    background: var(--side);
+    color: var(--text);
+    border: 0;
+    border-radius: 6px;
+    padding: 6px 11px;
+    margin: 0 6px 6px 0;
+    font-size: 12.5px;
+    cursor: pointer;
+    transition: transform 0.12s, background 0.12s;
+  }
+  .chip:hover { background: var(--hover); transform: scale(1.08); }
+  .chip:active { background: var(--press); }
+
+  .inputbar {
+    background: var(--frame);
+    padding: 4px 16px 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .field {
+    flex: 1;
+    min-width: 0;
+    background: var(--strip);
+    border: 1px solid var(--outline);
+    border-radius: 8px;
+    padding: 0 14px;
+    display: flex;
+  }
+  .field:focus-within { border-color: var(--accent); }
+  .field input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    border: 0;
+    outline: none;
+    color: var(--text);
+    font-size: 15px;
+    padding: 10px 0;
+    caret-color: var(--text);
+  }
+  .field input::placeholder { color: var(--muted); }
+
+  .status {
+    background: var(--strip);
+    padding: 4px 12px;
+    font-size: 11.5px;
+    color: var(--muted);
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  @media (max-width: 860px) {
+    .app { height: auto; min-height: 100vh; grid-template-rows: auto auto auto auto auto auto; }
+    .main { grid-template-columns: minmax(0, 1fr); padding: 12px 16px; }
+    .chat { min-height: 420px; padding: 12px; }
+    .urlbar { display: none; }
+    .toolbar { flex-wrap: wrap; }
+    .toolbar .accent-btn { margin-left: auto; }
+    .inputbar { padding: 4px 16px 10px; flex-wrap: wrap; }
+    .topics { padding: 10px 16px 4px; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="tabs">
+    <div class="tab">
+      <div class="avatar-tab">
+        <span class="fallback">テト</span>
+        <img class="avatar-img" id="tabAvatar" alt="">
+      </div>
+      <span>Kasane Teto · CiberBot</span>
+      <span class="tab-close">✕</span>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button class="nav" type="button" title="Atrás">←</button>
+    <button class="nav" type="button" title="Adelante">→</button>
+    <button class="nav" type="button" title="Recargar">↻</button>
+    <div class="urlbar">
+      <span>🔒</span>
+      <span class="url">ciberbot://kasane-teto/chat</span>
+    </div>
+    <button class="nav" type="button" title="Menú">☰</button>
+    <button class="accent-btn" id="newSession" type="button">Nueva sesión</button>
+  </div>
+
+  <div class="main">
+    <aside class="side">
+      <div class="avatar-box">
+        <span class="fallback" id="profileFallback">テト</span>
+        <img class="avatar-img" id="profileAvatar" alt="Kasane Teto">
+        <div class="kali-badge" id="kaliBadge">
+          <span class="kali-text" id="kaliText">KALI LINUX</span>
+          <img id="kaliImage" alt="Kali Linux">
+        </div>
+      </div>
+      <div class="side-title">Kasane Teto</div>
+      <div class="side-sub">Guía de ciberseguridad</div>
+      <button class="side-btn" id="kaliToggle" type="button">Mostrar logo de Kali</button>
+      <button class="side-btn" id="exportChat" type="button">Guardar chat en .txt</button>
+      <button class="side-btn" id="photoButton" type="button">Cargar foto de Teto</button>
+      <button class="side-btn" id="kaliLogoButton" type="button">Cargar logo de Kali</button>
+      <input type="file" id="photoInput" accept="image/*" hidden>
+      <input type="file" id="kaliInput" accept="image/*" hidden>
+      <div class="side-label">SITIOS OFICIALES</div>
+      <button class="side-btn" type="button" data-url="https://www.unam.mx">Abrir UNAM</button>
+      <button class="side-btn" type="button" data-url="https://www.ingenieria.unam.mx">Facultad de Ingeniería</button>
+      <button class="side-btn" type="button" data-url="https://tec.mx">Tec de Monterrey</button>
+      <button class="side-btn" type="button" data-url="https://cuc.udg.mx">CUCosta (UdeG)</button>
+      <button class="side-btn" type="button" data-url="https://www.conalep.edu.mx">Conalep</button>
+      <button class="side-btn" type="button" data-url="https://www.kali.org">Kali Linux</button>
+      <button class="side-btn" type="button" data-url="https://tryhackme.com">TryHackMe</button>
+      <button class="side-btn" type="button" data-url="https://owasp.org/www-project-top-ten/">OWASP Top 10</button>
+      <div class="side-note">Las respuestas se basan en planes de estudio y fuentes públicas consultadas. Confirma cambios con cada institución.</div>
+    </aside>
+
+    <section class="chat">
+      <div class="messages" id="messages"></div>
+    </section>
+  </div>
+
+  <div class="topics">
+    <div class="topics-label">TEMAS</div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <div class="inputbar">
+    <div class="field">
+      <input id="inputBox" type="text" placeholder="Escribe tu pregunta" autocomplete="off">
+    </div>
+    <button class="accent-btn" id="sendButton" type="button">Enviar</button>
+  </div>
+
+  <div class="status">
+    <span>Listo</span>
+    <span>Enter para enviar</span>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  const DATA = {"openers": ["Te explico el tema con detalle:", "Esta es la información completa:", "Aquí tienes un resumen técnico:"], "closers": ["¿Quieres que profundice en algún punto?", "Puedo ampliar cualquiera de estos temas.", "Confirma siempre los datos vigentes en los sitios oficiales."], "fallbacks": ["No encontré una coincidencia exacta con tu consulta. Estos son los temas disponibles:", "Tu consulta no coincide con un tema registrado. Puedes elegir uno de la barra inferior:"], "greeting": "Bienvenido a CiberBot. Soy Kasane Teto, guía de ciberseguridad e ingeniería en sistemas. Elige un tema de la barra inferior o escribe tu pregunta.", "helpText": "Temas disponibles:\n• Kasane Teto: quién es, origen, software y datos del personaje.\n• Ciberseguridad: conceptos, historia, triada CIA, malware, phishing, criptografía, redes, nube, bases de datos, OWASP, hacking ético, forense, riesgos y respuesta a incidentes.\n• Profesión: salidas laborales, certificaciones, marcos y normas, plan de estudios, ruta de aprendizaje, laboratorios y preguntas frecuentes.\n• Instituciones: CUC (UdeG), Conalep, UNIVA, Tec de Monterrey y UNAM, con qué preguntar a cada una.\nEscribe palabras clave como Teto, UNAM, phishing, certificaciones o ruta.", "knowledge": [{"Label": "¿Quién es Kasane Teto?", "Keywords": ["teto", "kasane", "quien eres", "quien es", "presentate", "presentarte", "quien sos", "que eres", "utau", "vocaloid", "baguette", "personaje"], "Answer": ["Kasane Teto es un personaje de voz sintética originario de Japón. Es la guía de este CiberBot, aunque no es una persona real: el programa usa su nombre y su personalidad para presentar la información.", "Origen: usuarios del foro japonés 2channel la crearon en 2008 como broma del 1 de abril. Sus rasgos se eligieron al azar a partir de sugerencias de los usuarios.", "Fechas clave: primer video el 6 de abril de 2008, banco de voz UTAU el 13 de abril de 2008 y primera canción con su voz el 1 de junio de 2008.", "Creación: el diseño es de Sen y la voz de Oyamano Mayo. En 2009 se formó el círculo TwinDrill, que promueve y administra sus derechos.", "Relación con Vocaloid: es una parodia de los cantantes Vocaloid de Crypton Future Media. No es un personaje Vocaloid oficial.", "Software en el que se usa: UTAU (2008), TALQu (2021), Synthesizer V (2023), VOICEPEAK (2025) y Synthesizer V 2 (2025).", "Perfil oficial: 31 años, personalidad tsundere y género «quimera» en su configuración oficial. Le gustan las baguettes, por eso aparecen en muchas ilustraciones.", "Rasgos visuales: su peinado de tirabuzones (drills) y la baguette son sus elementos más reconocibles.", "Impacto: en seis meses desde su lanzamiento se etiquetaron más de 500 videos con su nombre en Niconico. En los Music Awards Japan 2025, cinco de las diez canciones Vocaloid más populares de Japón tenían su voz, frente a tres de Hatsune Miku.", "Frase característica: se le presenta como «una diva nacida de una broma».", "Fuente: artículo «Kasane Teto» de Wikipedia en inglés. Los datos pueden cambiar; confirma en sus canales oficiales."]}, {"Label": "Historia de la ciberseguridad", "Keywords": ["historia", "historico", "antecedentes", "origen", "morris", "stuxnet", "wannacry", "notpetya", "solarwinds", "heartbleed", "colonial"], "Answer": ["La ciberseguridad surgió junto con las redes. Algunos hitos importantes:", "• 1988: el gusano Morris, creado por Robert Tappan Morris, se propagó por internet y provocó una de las primeras grandes alertas. Ese mismo año se creó el CERT/CC, uno de los primeros equipos de respuesta a incidentes.", "• 2010: Stuxnet, un gusano que atacó centrifugadoras de la planta nuclear de Natanz, en Irán. Marcó el inicio de los ciberataques contra infraestructura industrial.", "• 2014: Heartbleed, una falla en la biblioteca OpenSSL (CVE-2014-0160) que permitía leer memoria de servidores.", "• 2017: WannaCry, un ransomware que aprovechó la vulnerabilidad EternalBlue en Windows y afectó a hospitales y empresas de todo el mundo.", "• 2017: NotPetya, un software destructivo que se hizo pasar por ransomware y afectó principalmente a Ucrania y a empresas multinacionales.", "• 2020: SolarWinds, un ataque a la cadena de suministro que alteró una actualización de la plataforma Orion y comprometió a miles de organizaciones.", "• 2021: Colonial Pipeline, un ransomware que obligó a detener el suministro de combustible en la costa este de Estados Unidos.", "Lección común: la mayoría de estos incidentes aprovechó parches sin aplicar, credenciales débiles o cadenas de suministro sin control."]}, {"Label": "Triada CIA", "Keywords": ["cia", "triada", "confidencialidad", "integridad", "disponibilidad", "aaa", "no repudio"], "Answer": ["La triada CIA son los tres pilares de la seguridad de la información:", "• Confidencialidad: solo las personas autorizadas acceden a la información. Controles: cifrado, control de acceso por roles y clasificación de datos. Ejemplo: un expediente médico cifrado que solo ve el personal asignado.", "• Integridad: los datos no cambian sin autorización. Controles: funciones hash como SHA-256, firmas digitales, control de versiones y bitácoras de auditoría. Ejemplo: comparar el hash de un instalador con el que publica el fabricante.", "• Disponibilidad: los servicios funcionan cuando se necesitan. Controles: respaldos probados, redundancia, balanceo de carga y planes de continuidad. Ejemplo: un sitio que resiste un ataque de denegación de servicio (DDoS) gracias a un proveedor con mitigación.", "Modelo AAA, complementario: autenticación (quién eres), autorización (qué puedes hacer) y auditoría (qué hiciste).", "Además se considera el no repudio: que una persona no pueda negar una acción que realizó, por ejemplo mediante firmas digitales y registros.", "En la práctica las decisiones equilibran los tres. Un cifrado mal gestionado puede afectar la disponibilidad si se pierden las llaves."]}, {"Label": "Malware", "Keywords": ["malware", "virus", "troyano", "troyanos", "ransomware", "gusano", "gusanos", "spyware", "rootkit", "keylogger", "botnet", "backdoor"], "Answer": ["El malware es software diseñado para dañar, explotar o tomar control de un sistema sin el consentimiento de su usuario.", "Tipos principales:", "• Virus: se adhiere a archivos o programas y se activa al ejecutarlos.", "• Gusano: se propaga por sí solo a través de redes, aprovechando vulnerabilidades o credenciales.", "• Troyano: se presenta como software legítimo y abre una puerta trasera (backdoor).", "• Ransomware: cifra los archivos y exige un pago. Hoy suele incluir robo de datos (doble extorsión).", "• Spyware y keyloggers: registran actividad o capturan lo que se teclea.", "• Rootkit: se oculta en niveles profundos del sistema para mantener acceso persistente.", "• Botnet: red de equipos infectados controlados de forma remota, usada para spam o ataques de denegación de servicio.", "Ciclo de un ataque, según el modelo Cyber Kill Chain de Lockheed Martin: reconocimiento, armamento, entrega, explotación, instalación, comando y control, y acciones sobre el objetivo.", "Señales de infección: procesos desconocidos, lentitud repentina, cambios en el registro del sistema, conexiones salientes inusuales y archivos con extensiones extrañas.", "Análisis: el análisis estático examina el código sin ejecutarlo; el dinámico lo observa en un entorno aislado (sandbox).", "Defensas: EDR, parches al día, mínimo privilegio, segmentación de red y respaldos con la regla 3-2-1 (tres copias, en dos medios distintos y una fuera de sitio)."]}, {"Label": "Phishing e ingeniería social", "Keywords": ["phishing", "smishing", "vishing", "quishing", "suplantacion", "ingenieria social", "correo falso", "bec"], "Answer": ["El phishing es una suplantación que busca engañar a la víctima para revelar credenciales o datos, o para ejecutar acciones dañinas.", "Modalidades: masivo, spear phishing (dirigido a una persona), whaling (a directivos), smishing (SMS), vishing (llamadas), quishing (códigos QR) y BEC, que compromete correos empresariales y suele pedir transferencias de dinero.", "Señales de alerta:", "• Urgencia o amenazas para actuar de inmediato.", "• Remitente con un dominio parecido al oficial, por ejemplo con una letra cambiada.", "• Enlaces cuyo destino no coincide con el texto al pasar el cursor.", "• Adjuntos inesperados o solicitudes de contraseñas, códigos o cambios de cuenta bancaria.", "Cómo verificar: comunícate con la persona o la empresa por un canal que tú busques, no por el que aparece en el mensaje.", "Si ya diste tus datos: cambia las contraseñas, activa MFA, revisa reglas de reenvío del correo y avisa a TI o a tu banco.", "Controles organizacionales: SPF, DKIM y DMARC para autenticar el correo, filtros antispam, MFA, simulaciones de phishing y capacitación continua."]}, {"Label": "Contraseñas y MFA", "Keywords": ["contrasena", "contrasenas", "password", "passwords", "mfa", "2fa", "autenticacion", "llave", "llaves"], "Answer": ["Buenas prácticas de autenticación:", "• Longitud: 12 caracteres o más. Una frase de paso larga suele ser más segura que una contraseña corta con símbolos.", "• Unicidad: una contraseña distinta por servicio, guardada en un gestor de contraseñas.", "• Revisión: compara las contraseñas con listas de filtraciones conocidas, como recomienda NIST SP 800-63B.", "• Cambios: no fuerces cambios periódicos sin motivo. Cambia la contraseña cuando haya indicios de compromiso.", "• MFA: combina algo que sabes, algo que tienes y, en algunos casos, algo que eres. Prefiere llaves de seguridad (FIDO2/WebAuthn) o apps de autenticación antes que SMS.", "• Almacenamiento: hash con una función lenta y con sal, como Argon2id, bcrypt o scrypt. Nunca texto plano, ni MD5 o SHA-1 sin sal.", "• Monitoreo: alerta tras intentos fallidos repetidos y revisa accesos inusuales.", "La reutilización de contraseñas es una de las causas más comunes de cuentas comprometidas."]}, {"Label": "Criptografía", "Keywords": ["cifrado", "criptografia", "aes", "rsa", "hash", "hashes", "sha", "tls", "pki", "simetrico", "asimetrico", "clave", "claves", "firma", "firmas"], "Answer": ["Tipos y usos de la criptografía:", "• Simétrica: la misma clave cifra y descifra. AES-256 es el estándar más usado. Es rápida y sirve para grandes volúmenes de datos.", "• Asimétrica: par de claves pública y privada. RSA y ECC sirven para intercambiar claves, firmar y emitir certificados. RSA de al menos 2048 bits es la referencia mínima actual.", "• Hash: huella de longitud fija que no se puede revertir. SHA-256 verifica integridad; para contraseñas se usan funciones diseñadas para ello.", "• PKI: las autoridades certificadoras emiten certificados X.509 que vinculan una clave con una identidad.", "• TLS: acuerda claves con criptografía asimétrica y cifra el tráfico con simétrica. Es el protocolo detrás de HTTPS.", "• Firma digital: garantiza autenticidad e integridad, y permite el no repudio.", "Gestión de llaves: generación segura, almacenamiento separado de los datos, rotación y revocación. Muchos incidentes ocurren porque la llave se guardó junto con el dato cifrado.", "Errores comunes: crear algoritmos propios, reutilizar nonces o vectores de inicialización, usar DES o 3DES en sistemas nuevos y cifrar sin autenticar el mensaje."]}, {"Label": "Redes y seguridad", "Keywords": ["redes", "red", "firewall", "ids", "ips", "vpn", "dmz", "osi", "tcp", "segmentacion", "puertos", "inalambrica", "wifi", "wpa", "zero", "trust"], "Answer": ["Conceptos clave de redes para la seguridad:", "• Modelos: OSI (siete capas) como referencia conceptual; TCP/IP como el modelo que se usa en la práctica.", "• Firewall: filtra tráfico según reglas. Puede ser de paquetes, con estado o de nueva generación (NGFW).", "• WAF: protege aplicaciones web frente a inyección, XSS y otros ataques.", "• IDS detecta y alerta; IPS detecta y además bloquea.", "• VPN: cifra el tráfico entre dos puntos, útil para acceso remoto.", "• DMZ y segmentación: aíslan zonas para limitar el movimiento lateral de un atacante.", "• Zero trust: no confía en ninguna conexión por defecto; verifica identidad y contexto en cada acceso.", "• Puertos comunes: 22 (SSH), 53 (DNS), 80 (HTTP), 443 (HTTPS) y 3389 (RDP). Cierra los que no uses. RDP expuesto a internet es un riesgo frecuente.", "Redes inalámbricas: WEP está obsoleto. WPA2 con AES es un mínimo aceptable y WPA3 con SAE es la opción recomendada cuando el equipo lo soporta.", "Ataques de red frecuentes: escaneo de puertos, ARP spoofing, DNS spoofing y ataques de denegación de servicio (DoS y DDoS)."]}, {"Label": "OWASP y desarrollo seguro", "Keywords": ["owasp", "web", "inyeccion", "sql", "xss", "csrf", "desarrollo", "devsecops", "secure", "ssrf"], "Answer": ["El OWASP Top 10 (edición 2021) lista los riesgos más críticos en aplicaciones web:", "• A01 Control de acceso roto: un usuario accede a datos que no le corresponden.", "• A02 Fallas criptográficas: datos sensibles sin cifrar o con algoritmos débiles.", "• A03 Inyección: SQL, comandos u otros intérpretes que ejecutan texto del usuario.", "• A04 Diseño inseguro: fallas desde la arquitectura, no solo en la implementación.", "• A05 Configuración de seguridad incorrecta: valores por defecto, servicios innecesarios o cabeceras faltantes.", "• A06 Componentes vulnerables o desactualizados.", "• A07 Fallas de identificación y autenticación.", "• A08 Fallas de integridad de software y datos, por ejemplo actualizaciones sin verificar.", "• A09 Fallas de registro y monitoreo: ataques que nadie detecta porque no hay registros.", "• A10 Falsificación de solicitudes del lado del servidor (SSRF).", "Ataques relacionados: XSS (inyección de scripts en el navegador) y CSRF (acciones forzadas con la sesión de la víctima).", "Prevención: consultas parametrizadas, validación de entradas y codificación de salidas, mínimo privilegio, cabeceras como Content Security Policy, dependencias actualizadas, análisis SAST y DAST, y revisión de código.", "Principios del desarrollo seguro: seguridad desde el diseño, mínimo privilegio y defensa en profundidad. Revisa si ya existe una edición más reciente del OWASP Top 10."]}, {"Label": "Hacking ético", "Keywords": ["pentest", "pentesting", "hacking", "hacker", "hackers", "vulnerabilidad", "vulnerabilidades", "auditoria", "red team", "blue team", "purple team", "bug bounty"], "Answer": ["El hacking ético (pentesting) consiste en atacar un sistema de forma autorizada para encontrar y reportar vulnerabilidades antes que un atacante.", "Requisitos: autorización por escrito, alcance definido, reglas de enfrentamiento y fechas acordadas.", "Fases típicas:", "1. Planeación y alcance.", "2. Reconocimiento (OSINT, con fuentes públicas).", "3. Escaneo y enumeración de servicios.", "4. Análisis de vulnerabilidades y explotación controlada.", "5. Postexplotación, solo si está permitida.", "6. Documentación con evidencia, severidad (CVSS) y recomendaciones.", "7. Reprueba las correcciones (retest).", "Equipos: red team (ataque simulado), blue team (defensa) y purple team (colaboración entre ambos).", "Programas de bug bounty: plataformas como HackerOne o Bugcrowd permiten reportar vulnerabilidades a empresas que invitan a probar sus sistemas, bajo sus reglas.", "Certificaciones: OSCP, CEH, PNPT y eJPT.", "Buena práctica: si encuentras una vulnerabilidad en un sistema ajeno sin autorización, no la explotes. Repórtala por el canal oficial de la organización."]}, {"Label": "Respuesta a incidentes", "Keywords": ["incidente", "incidentes", "brecha", "brechas", "csirt", "siem", "ioc", "playbook", "contencion"], "Answer": ["La respuesta a incidentes sigue un ciclo de cuatro fases, según la guía NIST SP 800-61:", "1. Preparación: políticas, equipo de respuesta (CSIRT), herramientas, contactos y playbooks.", "2. Detección y análisis: alertas de SIEM o EDR, triaje, severidad, alcance, IOC y línea de tiempo.", "3. Contención, erradicación y recuperación: aislar equipos, deshabilitar cuentas y bloquear IOC sin destruir evidencia. Después eliminar la causa, parchar y restaurar desde respaldos verificados.", "4. Actividades posteriores: reporte post-mortem, lecciones aprendidas y mejoras de controles.", "Criterios de severidad: impacto en datos, en servicios y en personas, además del alcance.", "Comunicación: define quién informa a directivos, clientes, autoridades y, en su caso, a los afectados. Un plan de comunicación evita improvisar bajo presión.", "Herramientas típicas: SIEM (Splunk, Elastic, Wazuh), EDR y, para análisis forense, Volatility y Autopsy."]}, {"Label": "Análisis forense digital", "Keywords": ["forense", "forensica", "evidencia", "custodia", "memoria", "volatility", "autopsy", "imagen"], "Answer": ["El análisis forense digital identifica, preserva, analiza y presenta evidencia digital para investigaciones internas, técnicas o legales.", "Principios básicos:", "• Orden de volatilidad: recolecta primero lo más volátil, como la memoria RAM y las conexiones de red, y después discos y registros.", "• Cadena de custodia: registra quién recolectó la evidencia, cuándo, con qué herramienta y quién la tuvo después.", "• Imagen forense: copia bit a bit del medio, con un bloqueador de escritura, y verifica su integridad con SHA-256.", "• Trabajo sobre copias: analiza siempre la imagen, nunca el original.", "Artefactos comunes: registros de eventos, historial de navegación, archivos recientes, registro de Windows, tareas programadas y conexiones de red.", "Herramientas: Autopsy y The Sleuth Kit para disco, Volatility para memoria y Wireshark para red.", "Resultado: un informe con línea de tiempo, hallazgos, metodología y limitaciones, redactado para que lo entienda un público no técnico."]}, {"Label": "Gestión de riesgos", "Keywords": ["riesgo", "riesgos", "matriz", "activos", "activo", "tratamiento", "31000", "27005", "amenaza", "amenazas"], "Answer": ["La gestión de riesgos identifica qué activos importan, qué amenazas los afectan y qué tan probable e impactante es un daño. Con eso decides qué controlar primero.", "Conceptos:", "• Activo: lo que tiene valor para la organización: datos, sistemas, personas y procesos.", "• Riesgo: probabilidad de que una amenaza explote una vulnerabilidad, multiplicada por su impacto.", "• Tratamiento: mitigar (aplicar controles), transferir (seguro o proveedor), aceptar (con justificación) o evitar (eliminar la actividad).", "Proceso típico: identificar activos, identificar amenazas y vulnerabilidades, estimar probabilidad e impacto, evaluar contra el apetito de riesgo y definir el plan de tratamiento.", "Matriz de riesgo: suele usar una escala de 1 a 5 en probabilidad y en impacto. El producto ubica cada riesgo en una zona baja, media o alta.", "Marcos de referencia: ISO/IEC 27005 e ISO 31000 para gestión de riesgos, y NIST SP 800-30 para evaluar riesgos en sistemas.", "Un riesgo residual siempre existe. El objetivo es que sea aceptable para la organización."]}, {"Label": "Seguridad en la nube", "Keywords": ["nube", "cloud", "aws", "azure", "gcp", "iam", "saas", "iaas", "paas"], "Answer": ["La seguridad en la nube combina los controles de la plataforma con la configuración que hace la organización.", "Modelo de responsabilidad compartida: el proveedor protege la infraestructura física y de red; el cliente protege sus datos, identidades, configuraciones y aplicaciones. El reparto cambia según el servicio (IaaS, PaaS o SaaS).", "Errores frecuentes:", "• Almacenamiento público por configuración incorrecta.", "• Llaves o credenciales expuestas en el código.", "• Cuentas con permisos excesivos.", "• Ausencia de MFA en cuentas administrativas.", "• Registros desactivados, lo que impide detectar ataques.", "Controles recomendados: IAM con mínimo privilegio, MFA, cifrado en reposo y en tránsito, gestión de llaves, registros centralizados y herramientas de postura de seguridad en la nube (CSPM).", "Certificaciones de referencia: AWS Certified Security – Specialty, Microsoft Certified: Security Operations Analyst Associate y Google Cloud Professional Cloud Security Engineer."]}, {"Label": "Seguridad en bases de datos", "Keywords": ["base de datos", "bases de datos", "basedatos", "basesdedatos", "mysql", "postgresql", "oracle", "consultas", "respaldos"], "Answer": ["La seguridad de bases de datos protege los datos almacenados y el acceso a ellos.", "• Control de acceso: cuentas con mínimo privilegio y separación entre administración y aplicación.", "• Consultas parametrizadas: evitan la inyección SQL.", "• Cifrado: en reposo, en tránsito con TLS y de columnas sensibles cuando aplique.", "• Auditoría: registrar consultas y cambios de privilegios.", "• Respaldos cifrados y probados, con pruebas periódicas de restauración.", "• Enmascaramiento y anonimización de datos en ambientes de desarrollo y pruebas.", "• Endurecimiento (hardening) según las guías del fabricante o los CIS Benchmarks.", "En México, los datos personales deben tratarse conforme a la Ley Federal de Protección de Datos Personales en Posesión de los Particulares."]}, {"Label": "Herramientas", "Keywords": ["herramienta", "herramientas", "wireshark", "nmap", "burp", "metasploit", "ghidra", "splunk", "snort", "suricata", "wazuh", "hashcat", "john", "sysinternals", "zap", "gobuster"], "Answer": ["Herramientas comunes, por función:", "• Redes: Wireshark (captura y análisis de tráfico), Nmap (descubrimiento de equipos y servicios), Snort y Suricata (IDS/IPS).", "• Aplicaciones web: Burp Suite (intercepta y modifica peticiones), OWASP ZAP (análisis de vulnerabilidades web) y Gobuster (descubrimiento de rutas).", "• Explotación en laboratorio: Metasploit, que agrupa exploits y módulos auxiliares.", "• Monitoreo y SIEM: Splunk, Elastic Security y Wazuh.", "• Ingeniería inversa: Ghidra, desarrollado por la NSA y publicado como software libre.", "• Forense: Autopsy, The Sleuth Kit y Volatility.", "• Contraseñas, solo en laboratorio o con autorización: Hashcat y John the Ripper, para evaluar la fortaleza de hashes propios.", "• Windows: Sysinternals, de Microsoft, para analizar procesos y servicios.", "Consejo: aprende primero el concepto que resuelve cada herramienta. La herramienta cambia; el razonamiento se mantiene."]}, {"Label": "Inteligencia artificial y seguridad", "Keywords": ["inteligencia artificial", "ia", "ai", "deepfake", "deepfakes", "machine learning", "llm", "prompt injection"], "Answer": ["La inteligencia artificial cambia tanto la defensa como el ataque.", "Usos defensivos: detección de anomalías, clasificación de alertas, correlación de eventos y automatización de respuestas repetitivas.", "Usos ofensivos: correos de phishing más convincentes, deepfakes de voz o video para fraude y búsqueda automatizada de vulnerabilidades.", "Riesgos propios de los sistemas con IA: inyección de instrucciones (prompt injection), envenenamiento de datos de entrenamiento, filtración de información sensible y dependencia de proveedores externos. OWASP publica una lista de riesgos específica para aplicaciones con modelos de lenguaje.", "Buenas prácticas: no compartas datos sensibles con herramientas no autorizadas, valida las salidas de los modelos y mantén a una persona en las decisiones críticas."]}, {"Label": "Ética y legalidad", "Keywords": ["etica", "legal", "legalidad", "permiso", "permisos", "autorizacion", "responsabilidad", "delito", "delitos", "penal", "divulgacion"], "Answer": ["El conocimiento técnico tiene responsabilidades legales y éticas.", "Principios:", "• Autorización: ninguna prueba de seguridad es legal sin permiso del dueño del sistema, por escrito.", "• Confidencialidad: los datos encontrados se tratan con cuidado y se eliminan según el acuerdo.", "• Divulgación responsable: reporta primero al responsable del sistema y da tiempo razonable para corregir antes de hacer público algo.", "• Proporcionalidad: prueba solo lo que está en el alcance y no causes daños ni interrupciones.", "En México: el Código Penal Federal sanciona el acceso ilícito a sistemas y equipos de informática en sus artículos 211 bis y siguientes. La Ley Federal de Protección de Datos Personales en Posesión de los Particulares regula el manejo de datos personales.", "Para casos concretos, consulta a una persona especialista en derecho."]}, {"Label": "Salidas laborales", "Keywords": ["puesto", "puestos", "empleo", "empleos", "trabajo", "roles", "rol", "soc", "analista", "salida", "salidas", "laboral", "consultor"], "Answer": ["Puestos frecuentes en ciberseguridad:", "• Analista SOC nivel 1: revisa alertas, descarta falsos positivos y escala incidentes.", "• Analista SOC nivel 2: investiga incidentes, correlaciona eventos y propone contención.", "• Pentester o hacker ético: prueba la seguridad con autorización y redacta reportes con evidencia.", "• Analista forense digital: preserva y analiza evidencia para investigaciones internas o legales.", "• Ingeniero de seguridad: implementa y opera firewalls, EDR, IAM y cifrado.", "• Arquitecto de seguridad: diseña controles y arquitecturas seguras desde el inicio.", "• Analista GRC: gestiona riesgos, políticas y cumplimiento, por ejemplo con ISO/IEC 27001.", "• Especialista en seguridad de nube: configura y audita plataformas en AWS, Azure o Google Cloud.", "• Seguridad OT e IoT: protege sistemas industriales y dispositivos conectados.", "• DevSecOps: integra controles de seguridad en el ciclo de desarrollo y despliegue.", "• Consultor de seguridad: evalúa organizaciones y propone mejoras a la medida.", "Ruta de entrada común: soporte técnico o redes, después SOC nivel 1 y luego una especialización.", "Habilidades más solicitadas: redes, Linux, scripting, comunicación escrita, trabajo bajo presión y pensamiento analítico."]}, {"Label": "Certificaciones", "Keywords": ["certificacion", "certificaciones", "comptia", "ceh", "oscp", "cissp", "cisa", "ccna", "ejpt", "pnpt", "cysa", "pentest+"], "Answer": ["Certificaciones más reconocidas:", "• CompTIA Security+: fundamentos de seguridad. Es un buen primer paso.", "• CompTIA CySA+: análisis y detección de amenazas, orientado a SOC.", "• CompTIA PenTest+: pruebas de penetración.", "• CCNA (Cisco): redes, base sólida para la seguridad de redes.", "• CEH (EC-Council): hacking ético con enfoque teórico y práctico.", "• eJPT y PNPT: pentesting práctico con laboratorios.", "• OSCP (OffSec): pentesting práctico con examen en laboratorio.", "• CISSP (ISC2): gestión y arquitectura de seguridad. Exige cinco años de experiencia laboral acreditada en al menos dos de sus ocho dominios.", "• CISA (ISACA): auditoría de sistemas de información. También exige experiencia.", "• ISO/IEC 27001 Lead Implementer o Lead Auditor: sistemas de gestión de seguridad de la información.", "Ruta sugerida: fundamentos (Security+ o eJPT), después una especialización (CySA+, PenTest+, OSCP o CISSP según tu camino) y al final gestión (CISA o ISO 27001).", "Consejo: revisa requisitos, costos, vigencia y recertificación en cada emisor."]}, {"Label": "Marcos y normas", "Keywords": ["marco", "marcos", "nist", "iso", "27001", "27002", "normas", "estandares", "csf", "normativa", "leyes", "legislacion", "mitre", "attack", "asvs", "pci"], "Answer": ["Marcos y normas más utilizados:", "• NIST CSF 2.0: marco voluntario con seis funciones: Gobernar, Identificar, Proteger, Detectar, Responder y Recuperar.", "• ISO/IEC 27001: requisitos para un sistema de gestión de seguridad certificable. ISO/IEC 27002 describe controles de referencia.", "• ISO/IEC 27005: gestión de riesgos de seguridad de la información.", "• NIST SP 800-53: catálogo de controles para sistemas federales de Estados Unidos.", "• NIST SP 800-61: guía para la respuesta a incidentes.", "• CIS Controls v8: 18 controles priorizados para reducir riesgos comunes.", "• MITRE ATT&CK: matriz de tácticas y técnicas de adversarios, usada para detección y pruebas.", "• OWASP ASVS: estándar de verificación de seguridad para aplicaciones.", "• PCI DSS: requisitos para organizaciones que manejan datos de tarjetas de pago.", "En México:", "• La Ley Federal de Protección de Datos Personales en Posesión de los Particulares regula el tratamiento de datos personales por particulares.", "• El Código Penal Federal sanciona el acceso ilícito a sistemas y equipos de informática (artículos 211 bis y siguientes).", "Confirma la normativa vigente antes de aplicarla a un caso concreto."]}, {"Label": "Plan de estudios", "Keywords": ["plan", "malla", "materias", "asignaturas", "estudiar", "carrera", "curriculum", "semestres"], "Answer": ["Un plan de ingeniería en sistemas con enfoque en ciberseguridad suele combinar cuatro bloques:", "• Ciencias básicas: cálculo, álgebra lineal, matemáticas discretas, probabilidad y estadística.", "• Programación y sistemas: fundamentos, estructuras de datos, algoritmos, sistemas operativos, arquitectura de computadoras y redes.", "• Datos y desarrollo: bases de datos, ingeniería de software y desarrollo seguro.", "• Seguridad: fundamentos, criptografía, seguridad en redes, seguridad web, análisis forense, gestión de riesgos y legislación.", "Al final suelen estar la práctica profesional, el servicio social y la titulación.", "Compara las mallas oficiales de cada institución para ver qué materias de seguridad incluyen y cuáles son optativas."]}, {"Label": "Ingeniería en sistemas", "Keywords": ["ingenieria en sistemas", "ingenieria de sistemas", "sistemas computacionales", "sistemas operativos", "algoritmos", "estructuras de datos", "programacion", "software", "scrum", "agil", "kanban"], "Answer": ["La ingeniería en sistemas forma profesionales para diseñar, desarrollar, implementar y administrar sistemas de software y de cómputo.", "Áreas principales:", "• Desarrollo de software y metodologías ágiles, como Scrum y Kanban.", "• Bases de datos: modelado, normalización, SQL y administración.", "• Sistemas operativos y administración de servidores (Linux y Windows Server).", "• Redes y telecomunicaciones.", "• Arquitectura de sistemas: distribuidos, nube y contenedores.", "• Gestión de proyectos de TI.", "• Inteligencia artificial y ciencia de datos, según el plan.", "Relación con la ciberseguridad: se protege mejor lo que se entiende. Quien sabe cómo funcionan una aplicación, una red y una base de datos detecta fallas que otro especialista podría pasar por alto."]}, {"Label": "Ruta de aprendizaje", "Keywords": ["aprender", "empezar", "empiezo", "principiante", "ruta", "desde cero", "por donde empiezo"], "Answer": ["Ruta recomendada para iniciar en ciberseguridad:", "1. Redes: modelo OSI, TCP/IP, DNS, HTTP, subredes y puertos. Meta: explicar qué ocurre cuando abres una página web.", "2. Linux y línea de comandos: permisos, procesos, logs y servicios. Meta: administrar una máquina sin interfaz gráfica.", "3. Programación: Python para automatizar tareas y Bash para el sistema. Meta: escribir un script que revise registros.", "4. Fundamentos de seguridad: triada CIA, malware, criptografía y autenticación.", "5. Seguridad web: OWASP Top 10 y laboratorios de práctica.", "6. Herramientas: Wireshark, Nmap y Burp Suite Community en un laboratorio propio.", "7. Práctica guiada: TryHackMe, Hack The Box, OverTheWire y PicoCTF.", "8. Certificación de entrada: CompTIA Security+ o eJPT, según tu enfoque.", "9. Proyecto propio: un laboratorio con máquinas virtuales y un informe de hallazgos en tu portafolio.", "Consejo: alterna teoría y práctica cada semana. Documenta lo que aprendes; un portafolio pesa más que varios certificados sin práctica."]}, {"Label": "Laboratorios legales", "Keywords": ["laboratorio", "laboratorios", "tryhackme", "hackthebox", "overthewire", "picoctf", "ctf", "ctftime", "practicar", "practica"], "Answer": ["Plataformas legales para practicar:", "• TryHackMe: rutas guiadas, ideales para empezar.", "• Hack The Box: máquinas y retos de dificultad creciente.", "• OverTheWire: juegos de línea de comandos. Bandit es el primer nivel recomendado.", "• PicoCTF: retos tipo captura de bandera (CTF) para estudiantes.", "• CTFtime: calendario mundial de competencias CTF.", "Laboratorio propio: Kali Linux o Ubuntu en una máquina virtual, con máquinas vulnerables como Metasploitable 2 en una red privada aislada.", "Regla básica: nunca pruebes sistemas de terceros sin autorización. En México el acceso ilícito a sistemas está sancionado penalmente."]}, {"Label": "Kali Linux", "Keywords": ["kali", "distribucion", "distribuciones"], "Answer": ["Kali Linux es una distribución de Linux basada en Debian, orientada a pruebas de penetración, auditoría y análisis forense.", "Incluye cientos de herramientas preinstaladas, como Nmap, Wireshark, Burp Suite y Metasploit.", "Uso recomendado: en una máquina virtual dentro de un laboratorio aislado. No la uses contra sistemas de terceros sin autorización.", "Primeros pasos: instálala en VirtualBox o VMware, actualiza el sistema y revisa la documentación oficial.", "Sitio oficial: kali.org."]}, {"Label": "Preguntas frecuentes", "Keywords": ["pregunta", "preguntas", "frecuentes", "duda", "dudas", "necesito", "sirve", "programar", "matematicas", "demanda"], "Answer": ["Preguntas frecuentes:", "• ¿Necesito saber programar? Sí, al menos lo básico. Python y Bash son muy útiles para automatizar tareas y analizar datos.", "• ¿Es legal practicar hacking? Solo en laboratorios propios, plataformas de práctica o sistemas con autorización por escrito.", "• ¿Sirve una carrera sin certificaciones? Sí. La carrera da bases sólidas, y las certificaciones ayudan a demostrar habilidades específicas.", "• ¿Qué estudiar antes de entrar? Matemáticas básicas, lógica, inglés técnico y, si es posible, Linux y redes.", "• ¿Puedo entrar sin carrera? Sí, con certificaciones, práctica demostrable y experiencia en soporte o redes. El camino es más largo, pero existe.", "• ¿Hay demanda? Hay demanda de profesionales de seguridad, pero el mercado exige experiencia práctica. Revisa vacantes actuales en portales de empleo de tu zona.", "• ¿Cuál es la diferencia con la ingeniería en sistemas? La ingeniería en sistemas construye y opera sistemas; la ciberseguridad los protege. Se complementan."]}, {"Label": "Qué preguntar a una universidad", "Keywords": ["preguntar", "inscribirme", "inscripcion", "elegir", "requisitos", "convocatoria"], "Answer": ["Preguntas que conviene hacer antes de elegir una universidad:", "• ¿El plan de estudios incluye materias de seguridad o solo una optativa?", "• ¿Tiene laboratorios, redes y software que usan profesionales del área?", "• ¿Cuántos profesores tienen experiencia laboral o certificaciones en el tema?", "• ¿Ofrecen prácticas profesionales con empresas y en qué sectores?", "• ¿Hay titulación por proyecto, tesis o examen?", "• ¿Qué costos, becas y descuentos existen, y cuáles son los requisitos?", "• ¿Cuál es el perfil de egreso y la tasa de titulación?", "• ¿El programa cuenta con acreditación o reconocimiento oficial vigente?"]}, {"Label": "CUC (UdeG)", "Keywords": ["cuc", "cucosta", "centro universitario de la costa", "udeg", "udg", "universidad de guadalajara"], "Answer": ["CUC: Centro Universitario de la Costa, de la Universidad de Guadalajara (UdeG), en Puerto Vallarta.", "Tipo: pública. Se rige por su Estatuto Orgánico, con versión de abril de 2022.", "Oferta de computación y telemática: revisa en la oferta vigente del plantel si se imparten ingeniería en computación, telemática o sistemas. No pude confirmar esa oferta con las fuentes que consulté.", "Ciberseguridad: no encontré una licenciatura específica en este plantel.", "Qué preguntar: si la oferta de computación se imparte en el CUCosta, qué materias de redes y seguridad incluye y si hay laboratorios.", "Recomendación: revisa la oferta vigente y los requisitos en cuc.udg.mx antes de inscribirte."]}, {"Label": "Conalep", "Keywords": ["conalep", "colegio nacional de educacion profesional tecnica", "profesional tecnico", "tecnico en informatica", "bachiller tecnico", "tecnico"], "Answer": ["Conalep: Colegio Nacional de Educación Profesional Técnica.", "Tipo: organismo público descentralizado del Gobierno Federal, creado por decreto en 1978.", "Presencia: cientos de planteles en todo el país.", "Carrera relacionada: Profesional Técnico en Informática. Informática es una de sus áreas de formación técnica.", "Duración: seis semestres (tres años). Al acreditar todos los módulos puedes obtener el título de Profesional Técnico Bachiller.", "Continuidad: sus egresados pueden seguir con estudios de nivel superior. Revisa los convenios vigentes de tu plantel con universidades.", "Modalidad y horarios: consulta en tu plantel los turnos y la modalidad disponibles.", "Prácticas profesionales: forman parte de la carrera y deben estar relacionadas con lo que estudiaste.", "Tecnología: tiene un convenio con Oracle Academy para impulsar habilidades tecnológicas.", "Ciberseguridad: no hay una carrera técnica específica. La base es Informática y la especialización llega en la universidad.", "Qué preguntar: qué módulos de redes y sistemas operativos incluye tu plantel, y si tiene laboratorios.", "Sitio oficial: conalep.edu.mx."]}, {"Label": "UNIVA", "Keywords": ["univa", "universidad del valle de atemajac", "valle de atemajac"], "Answer": ["UNIVA: Universidad del Valle de Atemajac.", "Tipo: universidad privada.", "Presencia: tiene campus en varias ciudades de México, entre ellas Puerto Vallarta.", "Modalidades: licenciaturas escolarizadas y semiescolarizadas (modelo Impulso).", "Oferta de sistemas: un anuncio de UNIVA Vallarta de junio de 2025 promociona la Licenciatura en Ingeniería en Sistemas y Tecnologías de la Información. No encontré una licenciatura específica en ciberseguridad.", "Qué preguntar: si tienen un programa afín o planes de ciberseguridad, y qué materias de sistemas y redes incluye la oferta de ingeniería.", "Recomendación: confirma la oferta y los requisitos directamente con la universidad."]}, {"Label": "Tec de Monterrey", "Keywords": ["tec", "tecnologico de monterrey", "tec de monterrey", "monterrey", "itesm"], "Answer": ["Tecnológico de Monterrey (Tec de Monterrey).", "Tipo: universidad privada.", "Carrera relacionada: Ingeniería en Tecnologías Computacionales. No confirmé una licenciatura dedicada solo a ciberseguridad.", "Posgrado: Maestría en Ciberseguridad (MCY), que aparece en catálogos de posgrados del Tec. Revisa el plan y el costo vigentes.", "Tec Cybersecurity Hub: centro de colaboración en ciberseguridad del Tec, con actividades de investigación, formación y vinculación con empresas.", "Qué preguntar: qué materias de seguridad incluye la carrera de tecnologías computacionales y si hay acceso al hub y sus laboratorios.", "Fuentes: algunas notas tienen varios años. Confirma la vigencia en tec.mx y en maestriasydiplomados.tec.mx."]}, {"Label": "UNAM", "Keywords": ["unam", "universidad nacional autonoma de mexico", "facultad de ingenieria", "ciudad universitaria", "cert"], "Answer": ["UNAM: Universidad Nacional Autónoma de México.", "Carrera relacionada: Ingeniería en Computación, de la Facultad de Ingeniería. Otorga el título de Ingeniero(a) en Computación.", "Acreditación: revisa si el programa tiene reconocimiento vigente del CACEI u otro organismo acreditador.", "Optativas: consulta el mapa curricular vigente. Suele haber materias de seguridad, bases de datos, redes y desarrollo web, pero la oferta cambia con el tiempo.", "Otras ingenierías relacionadas: Ingeniería en Telecomunicaciones, Sistemas y Electrónica.", "Seguridad institucional: UNAM-CERT es el equipo de respuesta a incidentes de la UNAM.", "Ingreso: según la prensa, la convocatoria 2026 ofreció más de 48 mil lugares en 133 carreras y usó un examen en línea con apoyo de inteligencia artificial. Confirma la convocatoria vigente en la DGAE.", "Trámite: consulta la convocatoria y los requisitos en la Dirección General de Administración Escolar (DGAE).", "Qué preguntar: qué optativas de seguridad se ofrecen cada semestre y si hay proyectos con UNAM-CERT o laboratorios de seguridad.", "Sitios oficiales: unam.mx e ingenieria.unam.mx."]}, {"Label": "Comparar universidades", "Keywords": ["comparar", "comparacion", "comparativa", "diferencia", "diferencias", "mejor", "donde estudiar", "cual conviene", "opciones"], "Answer": ["Comparativa de las cinco instituciones:", "• Conalep: pública, técnico de tres años con bachillerato. Conviene si quieres trabajar pronto. No tiene carrera específica de ciberseguridad.", "• CUC (UdeG, Puerto Vallarta): pública y regional. Revisa la oferta de computación y telemática vigente.", "• UNIVA: privada, con modalidades escolarizada y semiescolarizada. En Vallarta se promociona Ingeniería en Sistemas y Tecnologías de la Información.", "• Tec de Monterrey: privada, con posgrado en ciberseguridad y un hub especializado. Revisa costos y becas.", "• UNAM: pública, con Ingeniería en Computación y un proceso de selección muy competitivo.", "Para decidir, compara el plan de estudios, los costos, las becas, la ubicación, la vinculación con empresas y los laboratorios disponibles.", "Usa la lista «Qué preguntar a una universidad» antes de inscribirte."]}]};
+  const knowledge = DATA.knowledge;
+  const messages = document.getElementById("messages");
+  const inputBox = document.getElementById("inputBox");
+  const chipBox = document.getElementById("chips");
+  const kaliBadge = document.getElementById("kaliBadge");
+  const kaliToggle = document.getElementById("kaliToggle");
+  const kaliImage = document.getElementById("kaliImage");
+  const kaliText = document.getElementById("kaliText");
+
+  function pick(list) {
+    return list[Math.floor(Math.random() * list.length)];
+  }
+
+  function norm(text) {
+    return text.toLowerCase().normalize("NFD").replace(/\p{Mn}/gu, "");
+  }
+
+  function testKeyword(query, tokens, keyword) {
+    const term = norm(keyword);
+    if (term.includes(" ")) {
+      return query.includes(term);
+    }
+    return tokens.includes(term);
+  }
+
+  function findTopics(question) {
+    const query = norm(question);
+    const tokens = query.split(/[^a-z0-9]+/);
+    const ranked = [];
+    for (const topic of knowledge) {
+      const score = topic.Keywords.filter((k) => testKeyword(query, tokens, k)).length;
+      if (score > 0) {
+        ranked.push({ topic: topic, score: score });
+      }
+    }
+    ranked.sort((a, b) => b.score - a.score);
+    return ranked.slice(0, 2).map((r) => r.topic);
+  }
+
+  function addBubble(text, fromBot) {
+    const el = document.createElement("div");
+    el.className = "bubble " + (fromBot ? "bot" : "user");
+    el.textContent = text;
+    messages.appendChild(el);
+    messages.scrollTop = messages.scrollHeight;
+  }
+
+  function addAnswer(topic) {
+    addBubble(pick(DATA.openers) + "\n" + topic.Answer.join("\n") + "\n\n" + pick(DATA.closers), true);
+  }
+
+  function submitTopic(topic) {
+    addBubble(topic.Label, false);
+    addAnswer(topic);
+  }
+
+  function submitQuestion(question) {
+    addBubble(question, false);
+    const topics = findTopics(question);
+    if (topics.length === 0) {
+      addBubble(pick(DATA.fallbacks) + "\n" + DATA.helpText, true);
+      return;
+    }
+    topics.forEach(addAnswer);
+  }
+
+  function submitInput() {
+    const question = inputBox.value.trim();
+    if (question === "") {
+      return;
+    }
+    inputBox.value = "";
+    submitQuestion(question);
+  }
+
+  function showGreeting() {
+    addBubble(DATA.greeting + "\n" + DATA.helpText, true);
+  }
+
+  function exportChat() {
+    const lines = Array.from(messages.children).map((el) => el.textContent);
+    const blob = new Blob(["﻿" + lines.join("\n\n")], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "CiberBot_chat.txt";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    addBubble("Chat guardado como CiberBot_chat.txt en tu carpeta de descargas.", true);
+  }
+
+  knowledge.forEach(function (topic) {
+    if (!topic.Label) {
+      return;
+    }
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "chip";
+    chip.textContent = topic.Label;
+    chip.addEventListener("click", function () { submitTopic(topic); });
+    chipBox.appendChild(chip);
+  });
+
+  document.querySelectorAll("[data-url]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      window.open(button.dataset.url, "_blank", "noopener");
+    });
+  });
+
+  kaliToggle.addEventListener("click", function () {
+    const showing = kaliBadge.classList.toggle("show");
+    kaliToggle.textContent = showing ? "Ocultar logo de Kali" : "Mostrar logo de Kali";
+  });
+
+  const tabAvatar = document.getElementById("tabAvatar");
+  const profileAvatar = document.getElementById("profileAvatar");
+  const photoInput = document.getElementById("photoInput");
+  const kaliInput = document.getElementById("kaliInput");
+
+  function readPicture(input, onLoaded) {
+    const file = input.files && input.files[0];
+    if (!file) {
+      return;
+    }
+    const reader = new FileReader();
+    reader.addEventListener("load", function () {
+      onLoaded(reader.result);
+    });
+    reader.readAsDataURL(file);
+  }
+
+  document.getElementById("photoButton").addEventListener("click", function () {
+    photoInput.click();
+  });
+  photoInput.addEventListener("change", function () {
+    readPicture(photoInput, function (src) {
+      tabAvatar.src = src;
+      profileAvatar.src = src;
+      tabAvatar.style.display = "block";
+      profileAvatar.style.display = "block";
+      document.querySelector(".avatar-tab .fallback").style.display = "none";
+      document.getElementById("profileFallback").style.display = "none";
+    });
+  });
+
+  document.getElementById("kaliLogoButton").addEventListener("click", function () {
+    kaliInput.click();
+  });
+  kaliInput.addEventListener("change", function () {
+    readPicture(kaliInput, function (src) {
+      kaliImage.src = src;
+      kaliImage.style.display = "block";
+      kaliText.style.display = "none";
+    });
+  });
+
+  document.getElementById("exportChat").addEventListener("click", exportChat);
+  document.getElementById("sendButton").addEventListener("click", submitInput);
+  document.getElementById("newSession").addEventListener("click", function () {
+    messages.innerHTML = "";
+    showGreeting();
+    inputBox.focus();
+  });
+  inputBox.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      submitInput();
+    }
+  });
+
+  showGreeting();
+  inputBox.focus();
+})();
+</script>
+</body>
+</html>
